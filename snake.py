@@ -68,6 +68,7 @@ class Board(object):
     def play(self):
         stdscr = self.stdscr
         time_to_grow = 0
+        self.score = 0
         while True:
             time.sleep(0.125)
             found_food = self.check_food()
@@ -81,6 +82,7 @@ class Board(object):
             if found_food:
                 time_to_grow += 2
                 self.replace_food()
+                self.score += 10
             k = stdscr.getch()
             if k == curses.KEY_UP:
                 stdscr.addstr(0, 100, "up!", curses.color_pair(1))
@@ -130,6 +132,13 @@ class Board(object):
         self._draw_food(food_position)
         self._draw_border()
         self._draw_snake(snake_positions)
+        self._draw_score()
+
+    def _draw_score(self):
+        line = self.xmax+2
+        indent = self.ymin+1
+        self.stdscr.addstr(line, indent, "score: %d" % self.score,
+                           self.text_color_pair)
 
     def _draw_food(self, food_position):
         x, y = int(food_position.real), int(food_position.imag)
