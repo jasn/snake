@@ -20,6 +20,7 @@ class Board(object):
         self.food_color_pair = 2
         self.background_color_pair = 3
         self.border_color_pair = 4
+        self.text_color_pair = 5
         curses.init_pair(self.snake_color_pair,
                          curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(self.food_color_pair,
@@ -28,6 +29,8 @@ class Board(object):
                          curses.COLOR_BLACK, curses.COLOR_BLACK)
         curses.init_pair(self.border_color_pair,
                          curses.COLOR_BLACK, curses.COLOR_GREEN)
+        curses.init_pair(self.text_color_pair,
+                         curses.COLOR_BLACK, curses.COLOR_WHITE)
         curses.noecho()
         curses.cbreak()
         stdscr.keypad(True)
@@ -39,12 +42,23 @@ class Board(object):
         self.snake = Snake()
         self.food = Food(self)
 
+        self.border = [complex(x, y) for y in range(self.ymin, self.ymax, 1)
+                       for x in [self.xmin, self.xmax]]
+
+        self.border += [complex(x, y) for x in range(self.xmin, self.xmax, 1)
+                        for y in [self.ymin, self.ymax]]
+        self.border = list(set(self.border))
+
 
     def check_food(self):
         return self.snake.positions[-1] == self.food.position
 
-
-    def check_colission(self):
+    def check_collision(self):
+        head = self.snake.positions[-1]
+        if head in self.border:  # snake hits border
+            return True
+        if head in self.snake.positions[:-1]:  # snake hits itself
+            return True
         return False
     
     def replace_food(self):
@@ -57,11 +71,12 @@ class Board(object):
         while True:
             time.sleep(0.125)
             found_food = self.check_food()
-            colission = self.check_colission()
-            if colission:
-                stdscr.addstr(board.xmax+1, board.ymin+1,
+            collision = self.check_collision()
+            if collision:
+                stdscr.addstr(self.xmax+1, self.ymin+1,
                               "You died!",
                               curses.color_pair(self.text_color_pair))
+                stdscr.refresh()
                 break
             if found_food:
                 time_to_grow += 2
@@ -113,8 +128,8 @@ class Board(object):
         food_position = self.food.position
 
         self._draw_food(food_position)
-        self._draw_snake(snake_positions)
         self._draw_border()
+        self._draw_snake(snake_positions)
 
     def _draw_food(self, food_position):
         x, y = int(food_position.real), int(food_position.imag)
