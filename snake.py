@@ -2,7 +2,7 @@
 import curses
 import sys
 import time
-
+from random import randint
 
 FOOD_SYMBOL = 'F'
 
@@ -12,13 +12,15 @@ class Food(object):
         self.position = position
         self.stdscr = stdscr
         self.color_pair = color_pair
+        self.draw()
         
-    def eaten():
-        pass
+    def eaten(self):
+        self.position = complex(randint(0, 50), randint(0, 50))
+        self.draw()
 
-    def draw():
+    def draw(self):
         x, y = int(self.position.real), int(self.position.imag)
-        stdscr.addstr(x, y, FOOD_SYMBOL, 
+        self.stdscr.addstr(x, y, FOOD_SYMBOL, self.color_pair)
         
 
 class Snake(object):
@@ -29,7 +31,7 @@ class Snake(object):
         self.color_pair = color_pair
         self.direction = complex(0, 1)
         self.old_tail = self.positions[0]
-        self.time_grow = 0
+        self.time_to_grow = 0
         self.food = food
         
     def _implicit_direction(self):
@@ -43,7 +45,7 @@ class Snake(object):
         return self.positions[-1]
     
     def foodAtHead(self):
-        return self.head() == self.food.position():
+        return self.head() == self.food.position
         
     def move(self, direction=None):
         if direction is not None and self.valid(direction):
@@ -52,12 +54,12 @@ class Snake(object):
             new_direction = self._implicit_direction()
         self.old_tail = self.positions[0]
 
-        if foodAtHead():
-            self.time_grow += 2
+        if self.foodAtHead():
+            self.time_to_grow += 2
             self.food.eaten()
         
-        if time_to_grow > 0:
-            time_to_grow -= 1
+        if self.time_to_grow > 0:
+            self.time_to_grow -= 1
             self.positions += [(self.positions[-1] + new_direction)]
         else:
             self.positions = (self.positions[1:]
@@ -77,7 +79,8 @@ def main(stdscr):
     stdscr.keypad(True)
     stdscr.refresh()
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
-    snake = Snake(stdscr, 1)
+    curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+    snake = Snake(stdscr, 1, Food(stdscr, complex(10, 10), 2))
     stdscr.nodelay(True)
     while True:
         time.sleep(0.1)
